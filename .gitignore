@@ -6,6 +6,7 @@ vfwd
 *.so
 *.dylib
 *.dll
+*.swp
 
 # Ignore binary output folders
 bin/
