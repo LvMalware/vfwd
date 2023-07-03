@@ -56,7 +56,7 @@ pub:
     port    u16
 }
 
-fn copy_stream(mut src &net.TcpConn, mut dest &net.TcpConn)! {
+pub fn copy_stream(mut src &net.TcpConn, mut dest &net.TcpConn)! {
     mut b := u8(0)
     for {
         src.read_ptr(&b, 1)!

@@ -2,6 +2,7 @@ module main
 
 import os
 import cli
+import fwd
 import socks5
 
 fn standalone(cmd cli.Command)! {
@@ -23,6 +24,32 @@ fn standalone(cmd cli.Command)! {
 
 fn server(cmd cli.Command)! {
 	return error("Not implemented yet")
+}
+
+fn forward(cmd cli.Command)! {
+	to := cmd.flags.get_string('to')!
+	from := cmd.flags.get_string('from')!
+	remote := cmd.flags.get_bool('remote')!
+
+	if remote {
+		return error("Not implemented yet")
+	}
+
+	if !from.contains(":") {
+		return error("Wrong value for parameter `from`")
+	}
+
+	if !to.contains(":") {
+		return error("Wrong value for parameter `to`")
+	}
+
+	mut server := fwd.FwdServer {
+		laddr: from.replace("*", "")
+		raddr: to
+	}
+
+	server.init()!
+	server.listen()
 }
 
 fn main() {
@@ -56,7 +83,6 @@ fn main() {
 						name: 'auth'
 						abbrev: 'a'
 						description: 'Require authentication'
-						found: true
 					},
 					cli.Flag {
 						flag: .string_array
@@ -67,17 +93,31 @@ fn main() {
 				]
 			},
 			cli.Command {
-				name: 'server'
-				description: 'Run in server mode'
-				execute: server
+				name: 'forward'
+				description: 'Run forward mode'
+				execute: forward
 				flags: [
-				]
-			},
-			cli.Command {
-				name: 'client'
-				description: 'Run in client mode'
-				execute: server
-				flags: [
+					cli.Flag {
+						flag: .string
+						name: 'from'
+						abbrev: 'f'
+						required: true
+						description: 'Address to listen/forward from (ex: ::8080)'
+						// required: true
+					},
+					cli.Flag {
+						flag: .string
+						name: 'to'
+						abbrev: 't'
+						description: 'Address to send traffic to (ex: 192.168.0.1:8080)'
+						// required: true
+					},
+					cli.Flag {
+						flag: .bool
+						name: 'remote'
+						abbrev: 'r'
+						description: 'Forward from remote host'
+					},
 				]
 			},
 		]
