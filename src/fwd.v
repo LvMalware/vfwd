@@ -4,11 +4,6 @@ import io
 import net
 import socks5
 
-const (
-	forwarder_agent = 0x00
-	controller_agent = 0xff
-)
-
 pub struct FwdServer {
 pub:
 	laddr string
@@ -41,7 +36,7 @@ fn connect_forward(raddr string)! {
 		}
 		client: net.dial_tcp(raddr)!
 	}
-	eprintln("[+] New forwarding connection from $raddr")
+	// eprintln("[+] New forwarding connection from $raddr")
 	socks.handle()
 }
 
@@ -65,7 +60,7 @@ fn port_forward(mut client &net.TcpConn, addr string) {
 fn (mut s FwdServer) remote_listen() {
 	for {
 		mut client := s.control.accept() or {
-			eprintln("Failed to accept client: $err")
+			// eprintln("Failed to accept client: $err")
 			continue
 		}
 
@@ -84,9 +79,7 @@ pub fn (mut s FwdServer) init()! {
 fn remote_forward(mut client &net.TcpConn, queue chan &net.TcpConn) {
 	mut target := <-queue
 	go io.cp(mut target, mut client)
-	io.cp(mut client, mut target) or {
-		eprintln("Copy Stream error: $err")
-	}
+	io.cp(mut client, mut target) or { }
 }
 
 pub fn (mut s FwdServer) listen() {
@@ -97,11 +90,12 @@ pub fn (mut s FwdServer) listen() {
 	eprintln("[+] Listening on $s.laddr")
 	for {
 		mut c := s.server.accept() or {
-			// eprintln("Error while accepting connection: $err")
 			continue
 		}
+
 		if s.remote {
 			s.client.write([u8(0xff)]) or {
+				// TODO: keep waiting for new controller when one is lost
 				c.close() or {}
 				eprintln("Exiting due to error: $err")
 				break
