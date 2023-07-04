@@ -11,19 +11,29 @@ fn standalone(cmd cli.Command)! {
 		users[cred.all_before(':')] = cred.all_after_first(':')
 	}
 	mut s := socks5.SocksServer {
-		lport: cmd.flags.get_int('port')!
-		lhost: cmd.flags.get_string('host')!
+		laddr: cmd.flags.get_string('listen')!.replace('*', '')
 		auth: socks5.SocksAuth {
 			atype: if cmd.flags.get_bool('auth')! { .username_password } else { .no_auth_required }
 			users: users
 		}
 	}
 	s.init()!
+	eprintln("Listening on $s.laddr")
 	s.listen()
 }
 
 fn server(cmd cli.Command)! {
-	return error("Not implemented yet")
+	from := cmd.flags.get_string('socks-listen')!
+	to := cmd.flags.get_string('control-listen')!
+	if !from.contains(':') { return error("Wrong value for `socks-listen` flag") }
+	if !to.contains(':') { return error("Wrong value for `control-listen` flag") }
+	mut s := fwd.FwdServer {
+		laddr: from.replace("*", "")
+		raddr: to.replace("*", "")
+		remote: true
+	}
+	s.init()!
+	s.listen()
 }
 
 fn forward(cmd cli.Command)! {
@@ -32,7 +42,11 @@ fn forward(cmd cli.Command)! {
 	remote := cmd.flags.get_bool('remote')!
 
 	if remote {
-		return error("Not implemented yet")
+		mut f := fwd.FwdClient {
+			raddr: from
+		}
+		f.init()!
+		f.start()!
 	}
 
 	if !from.contains(":") {
@@ -49,6 +63,7 @@ fn forward(cmd cli.Command)! {
 	}
 
 	server.init()!
+	eprintln("[+] Forwarding all traffic from $from to $to")
 	server.listen()
 }
 
@@ -65,18 +80,11 @@ fn main() {
 				description: "Run as a standalone SOCKS5 proxy server"
 				flags: [
 					cli.Flag {
-						flag: .int
-						name: 'port'
-						abbrev: 'p'
-						description: 'Port to listen on (default: 1080)'
-						default_value: ['1080']
-					},
-					cli.Flag {
 						flag: .string
-						name: 'host'
+						name: 'listen'
 						abbrev: 'l'
-						description: 'Listen host (ipv6 format)'
-						default_value: ['::']
+						description: 'Address to listen on (ex: :1080)'
+						default_value: [':1080']
 					},
 					cli.Flag {
 						flag: .bool
@@ -117,6 +125,27 @@ fn main() {
 						name: 'remote'
 						abbrev: 'r'
 						description: 'Forward from remote host'
+					},
+				]
+			},
+			cli.Command {
+				name: 'server'
+				description: 'Run as a server for remote forward'
+				execute: server
+				flags: [
+					cli.Flag {
+						flag: .string
+						name: 'socks-listen'
+						abbrev: 'l'
+						description: 'Address to listen on as a socks5 proxy (ex: :1080)'
+						default_value: [':1080']
+					},
+					cli.Flag {
+						flag: .string
+						name: 'control-listen'
+						abbrev: 'c'
+						description: 'Address to listen on for remote agents (ex: :1337)'
+						default_value: [':1337']
 					},
 				]
 			},

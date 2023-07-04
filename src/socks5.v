@@ -1,5 +1,6 @@
 module socks5
 
+import io
 import os
 import net
 
@@ -32,8 +33,7 @@ pub:
 
 pub struct SocksServer {
 pub:
-    lport int = 1080
-    lhost string
+    laddr string
 mut:
     auth     SocksAuth
     listener net.TcpListener
@@ -56,14 +56,6 @@ pub:
     port    u16
 }
 
-pub fn copy_stream(mut src &net.TcpConn, mut dest &net.TcpConn)! {
-    mut b := u8(0)
-    for {
-        src.read_ptr(&b, 1)!
-        dest.write_ptr(&b, 1)!
-    }
-}
-
 fn (r SocksRequest) do(mut client &net.TcpConn)! {
     match r.cmd {
         .connect {
@@ -79,8 +71,8 @@ fn (r SocksRequest) do(mut client &net.TcpConn)! {
 
             client.write([u8(0x5), 0x00, 0x00, 0x01, 0x7f, 0x00, 0x00, 0x01, 0x00, 0x00])!
 
-            go copy_stream(mut client, mut conn)
-            copy_stream(mut conn, mut client)!
+            go io.cp(mut client, mut conn)
+            io.cp(mut conn, mut client)!
 
         } .bind {
             return error("Not implemented yet")
@@ -252,7 +244,7 @@ pub fn (mut c SocksClient) close() {
 }
 
 pub fn (mut s SocksServer) init()! {
-    s.listener = net.listen_tcp(.ip6, '$s.lhost:$s.lport')!
+    s.listener = net.listen_tcp(.ip6, s.laddr)!
 }
 
 pub fn (mut s SocksServer) listen() {
