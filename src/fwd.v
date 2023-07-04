@@ -44,7 +44,10 @@ pub fn (mut c FwdClient) start()! {
 	mut b := u8(0)
 	defer { c.client.close() or {} }
 	for {
-		c.client.read_ptr(&b, 1)!
+		c.client.read_ptr(&b, 1) or {
+			if err.code() == 9 { continue }
+			return err
+		}
 		if b == 0xff { go connect_forward(c.raddr) }
 	}
 }
