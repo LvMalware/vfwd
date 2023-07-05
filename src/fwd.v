@@ -100,7 +100,7 @@ pub fn (mut s FwdServer) listen() {
 			s.client.write([u8(0xff)]) or {
 				// TODO: keep waiting for new controller when one is lost
 				c.close() or {}
-				eprintln("Exiting due to error: $err")
+				eprintln("[!] Exiting due to error: $err")
 				break
 			}
 			go remote_forward(mut c, s.queue)

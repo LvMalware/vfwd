@@ -18,7 +18,7 @@ fn standalone(cmd cli.Command)! {
 		}
 	}
 	s.init()!
-	eprintln("Listening on $s.laddr")
+	eprintln("[+] Listening on $s.laddr")
 	s.listen()
 }
 
