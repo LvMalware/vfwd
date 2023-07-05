@@ -41,16 +41,18 @@ Commands:
 
 `vfwd` supports three modes of operation: `standalone`, `forward` and `server`.
 
-In `standalone` mode, it acts as a regular SOCKS5 proxy listening on an specified address (*:1080 by default).
+In `standalone` mode, it acts as a regular SOCKS5 proxy server listening on an specified address.
 
 Example:
 
+> act as a SOCKS5 server on port 1080
 ```bash
-$ vfwd standalone
+$ vfwd standalone -l *:1080
 ```
 
 In `forward` mode, it can be used to forward traffic from one port/address to another or even traffic from a remote host acting as a SOCKS5 proxy server. Example:
 
+> forward all traffic from port 8443 to duckduckgo on port 443
 ```bash
 $ vfwd forward --from *:8443 --to duckduckgo.com:443
 ```
