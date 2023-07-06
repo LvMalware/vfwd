@@ -59,11 +59,17 @@ pub:
 fn (r SocksRequest) do(mut client &net.TcpConn)! {
     match r.cmd {
         .connect {
-            // eprintln("Connecting to $r.addr:$r.port")
+			// eprintln("[+] Connecting to $r.addr:$r.port")
             mut conn := net.dial_tcp("$r.addr:$r.port") or {
-                client.write([u8(0x5), 0x03, 0x00, 0x01, 0x7f, 0x00, 0x00, 0x01, 0x00, 0x00])!
+                client.write([u8(0x5), 0x05, 0x00, 0x01, 0x7f, 0x00, 0x00, 0x01, 0x00, 0x00])!
                 return error("Failed to connect: $err")
             }
+
+			// quickfix to ensure the connection is stablished
+			conn.peer_addr() or {
+                client.write([u8(0x5), 0x05, 0x00, 0x01, 0x7f, 0x00, 0x00, 0x01, 0x00, 0x00])!
+				return err
+			}
 
             defer {
                 conn.close() or {}
