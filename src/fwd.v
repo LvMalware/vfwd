@@ -53,7 +53,7 @@ pub fn (mut c FwdClient) start() ! {
 			return err
 		}
 		if b == 0xff {
-			go connect_forward(c.raddr)
+			spawn connect_forward(c.raddr)
 		}
 	}
 }
@@ -66,7 +66,7 @@ fn port_forward(mut client net.TcpConn, addr string) {
 	defer {
 		remote.close() or {}
 	}
-	go io.cp(mut client, mut remote)
+	spawn io.cp(mut client, mut remote)
 	io.cp(mut remote, mut client) or {}
 }
 
@@ -85,13 +85,13 @@ pub fn (mut s FwdServer) init() ! {
 	s.server = net.listen_tcp(.ip6, s.laddr)!
 	if s.remote {
 		s.control = net.listen_tcp(.ip6, s.raddr)!
-		go s.remote_listen()
+		spawn s.remote_listen()
 	}
 }
 
 fn remote_forward(mut client net.TcpConn, queue chan &net.TcpConn) {
 	mut target := <-queue
-	go io.cp(mut target, mut client)
+	spawn io.cp(mut target, mut client)
 	io.cp(mut client, mut target) or {}
 }
 
@@ -111,9 +111,9 @@ pub fn (mut s FwdServer) listen() {
 				eprintln('[!] Exiting due to error: ${err}')
 				break
 			}
-			go remote_forward(mut c, s.queue)
+			spawn remote_forward(mut c, s.queue)
 		} else {
-			go port_forward(mut c, s.raddr)
+			spawn port_forward(mut c, s.raddr)
 		}
 	}
 }

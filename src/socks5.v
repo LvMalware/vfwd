@@ -79,7 +79,7 @@ fn (r SocksRequest) do(mut client net.TcpConn) ! {
 			// BND.ADDR here is set as 127.0.0.1 (it should be the server's ip)
 			client.write([u8(0x5), 0x00, 0x00, 0x01, 0x7f, 0x00, 0x00, 0x01, 0x00, 0x00])!
 
-			go io.cp(mut client, mut conn)
+			spawn io.cp(mut client, mut conn)
 			io.cp(mut conn, mut client)!
 		}
 		.bind {
@@ -99,14 +99,7 @@ pub fn (a SocksAuth) authenticate(mut client net.TcpConn) ! {
 	}
 
 	nmethods := int(buf[1])
-	// eprintln("Client supports $nmethods auth methods:")
 	client.read(mut buf[..nmethods])!
-
-	/*
-	for i in 0 .. nmethods {
-        eprintln("Method $i: ${buf[i].hex()}")
-    }
-	*/
 
 	if u8(a.atype) !in buf[..nmethods] {
 		client.write([u8(0x05), 0xff])!
@@ -224,7 +217,7 @@ pub fn (mut c SocksClient) read_request() !SocksRequest {
 	mut port := u16(0)
 	c.client.read_ptr(voidptr(&port), int(sizeof(port)))!
 	// convert port from network byte order (big-endian) to host byte order
-	port = conv.nth16(port)
+	port = conv.ntoh16(port)
 
 	address = address.all_before_last(':0').trim('[]')
 
