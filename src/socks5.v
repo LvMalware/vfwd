@@ -6,23 +6,23 @@ import net
 import net.conv
 
 pub enum AuthType {
-	no_auth_required = 0
-	gssapi = 1
-	username_password = 2
+	no_auth_required      = 0
+	gssapi                = 1
+	username_password     = 2
 	// ... other IANA-assigned methods
 	no_acceptable_methods = 255
 }
 
 pub enum RequestType {
-	connect = 0x01
-	bind = 0x02
+	connect       = 0x01
+	bind          = 0x02
 	udp_associate = 0x03
 }
 
 pub enum AddressType {
-	ipv4 = 0x01
+	ipv4   = 0x01
 	domain = 0x03
-	ipv6 = 0x04
+	ipv6   = 0x04
 }
 
 pub struct SocksAuth {
@@ -35,7 +35,7 @@ pub:
 pub struct SocksServer {
 pub:
 	laddr string
-mut:
+pub mut:
 	auth     SocksAuth
 	listener net.TcpListener
 }
@@ -43,7 +43,7 @@ mut:
 pub struct SocksClient {
 pub:
 	auth SocksAuth
-mut:
+pub mut:
 	client &net.TcpConn
 }
 
